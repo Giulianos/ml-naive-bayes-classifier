@@ -25,6 +25,8 @@ func main() {
     []uint64 { 1, 0, 1, 0, 0, 1 },
   })
 
-  fmt.Println(nb.PDh)
+  class, prioriProb := nb.Predict([]uint64 { 1, 0, 1, 1, 0 })
+
+  fmt.Printf("Las preferencias corresponden a %d (%f)\n", class, prioriProb)
 
 }
