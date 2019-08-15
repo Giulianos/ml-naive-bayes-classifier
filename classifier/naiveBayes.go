@@ -47,27 +47,30 @@ func (nb NaiveBayes) Predict(features []uint64) (uint64, float64) {
 	return maxArg, maxVal/total
 }
 
-func NewNaiveBayes() NaiveBayes {
-  nb := NaiveBayes{}
-  nb.PDh = map[PDhKey]float64{
-    PDhKey{0, 1, 1}: 0.95,
-    PDhKey{0, 0, 1}: 0.05,
-    PDhKey{1, 1, 1}: 0.05,
-    PDhKey{1, 0, 1}: 0.95,
-    PDhKey{2, 1, 1}: 0.02,
-    PDhKey{2, 0, 1}: 0.98,
-    PDhKey{3, 1, 1}: 0.20,
-    PDhKey{3, 0, 1}: 0.80,
-    PDhKey{0, 1, 0}: 0.03,
-    PDhKey{0, 0, 0}: 0.97,
-    PDhKey{1, 1, 0}: 0.82,
-    PDhKey{1, 0, 0}: 0.18,
-    PDhKey{2, 1, 0}: 0.34,
-    PDhKey{2, 0, 0}: 0.66,
-    PDhKey{3, 1, 0}: 0.92,
-    PDhKey{3, 0, 0}: 0.08,
+func (nb *NaiveBayes) Train(ds [][]uint64) {
+  freqTable := make(map[PDhKey]float64)
+  countTable := make(map[uint64]float64)
+
+  // Fill the frequency table
+  for _, row := range ds {
+    class := row[len(row)-1]
+    countTable[class] += 1
+    for feature, featureValue := range row[:len(row)-1] {
+      freqTable[PDhKey{uint64(feature), featureValue, class}] += 1
+    }
   }
-  nb.Ph = []float64 { 0.9, 0.1 }
+
+  // Obtain relative frequencies
+  for key, value := range freqTable {
+    freqTable[key] = value / countTable[key.class]
+  }
+
+  nb.PDh = freqTable
+}
+
+func NewNaiveBayes(probH []float64) NaiveBayes {
+  nb := NaiveBayes{}
+  nb.Ph = probH
 
   return nb
 }
