@@ -34,15 +34,17 @@ func (nb NaiveBayes) posterioriProbability(features []uint64, class uint64) floa
 func (nb NaiveBayes) Predict(features []uint64) (uint64, float64) {
 	var maxArg uint64
 	var maxVal float64
+        var total float64
 	for class, _ := range nb.Ph {
 		val := nb.posterioriProbability(features, uint64(class))
+                total += val
 		if val > maxVal || class == 0 {
 			maxArg = uint64(class)
 			maxVal = val
 		}
 	}
 
-	return maxArg, maxVal
+	return maxArg, maxVal/total
 }
 
 func NewNaiveBayes() NaiveBayes {
@@ -65,7 +67,7 @@ func NewNaiveBayes() NaiveBayes {
     PDhKey{3, 1, 0}: 0.92,
     PDhKey{3, 0, 0}: 0.08,
   }
-  nb.Ph = []float64 { 0.1, 0.9 }
+  nb.Ph = []float64 { 0.9, 0.1 }
 
   return nb
 }
