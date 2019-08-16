@@ -11,7 +11,7 @@ import (
 	"github.com/Giulianos/ml-naive-bayes-classifier/classifier"
 )
 
-var natMapping []string = []string{"I", "E"}
+var natMapping = []string{"I", "E"}
 
 func loadDataSet(path string) [][]uint64 {
 	file, _ := os.Open(path)
