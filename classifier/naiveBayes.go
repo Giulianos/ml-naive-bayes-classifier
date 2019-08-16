@@ -52,6 +52,10 @@ func (nb NaiveBayes) Predict(example Example) (string, float64) {
 	return maxArg, maxVal / total
 }
 
+func laplaceCorrection(count float64, total float64, classes float64) float64 {
+	return (count + 1) / (total + classes)
+}
+
 // Train receives the dataset and trains the classifier
 func (nb *NaiveBayes) Train(examples []Example, classifications []string) {
 	freqTable := make(map[_PDhKey]float64)
@@ -67,8 +71,9 @@ func (nb *NaiveBayes) Train(examples []Example, classifications []string) {
 	}
 
 	// Obtain relative frequencies
+	var totalClasses = len(countTable)
 	for key, value := range freqTable {
-		freqTable[key] = value / countTable[key.class]
+		freqTable[key] = laplaceCorrection(value, countTable[key.class], float64(totalClasses))
 	}
 
 	nb.PDh = freqTable
