@@ -5,55 +5,53 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-	"io"
-	"os"
-	"strconv"
-	"strings"
-
 	"github.com/Giulianos/ml-naive-bayes-classifier/classifier"
+	"io"
+	"log"
+	"os"
+	"strings"
 )
 
-var natMapping = []string{"I", "E"}
-
-func loadDataSet(path string) [][]uint64 {
+func loadDataSet(path string) ([]classifier.Example, []string, []string) {
 	file, _ := os.Open(path)
 	r := bufio.NewReader(file)
 	csvReader := csv.NewReader(r)
 
-	var ds [][]uint64
+	var examples []classifier.Example
+	var classifications []string
 
-	// Discard header
-	csvReader.Read()
+	// Read headers
+	headers, err := csvReader.Read()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for {
 		record, err := csvReader.Read()
 		if err == io.EOF {
 			break
 		}
-		var row []uint64
-		for _, fieldValue := range record[:len(record)-1] { // Omit nationality
-			temp, _ := strconv.ParseUint(fieldValue, 10, 64)
-			row = append(row, temp)
+		var example = classifier.Example{}
+		for field, fieldValue := range record[:len(record)-1] { // Omit nationality
+			example[headers[field]] = fieldValue
 		}
-		// Convert nationality to 1/0
-		var convNat uint64
-		if record[len(record)-1] == natMapping[1] {
-			convNat = 1
-		}
-		row = append(row, convNat)
-		ds = append(ds, row)
+		// Add classification
+		classifications = append(classifications, record[len(record)-1])
+		// Add example
+		examples = append(examples, example)
 	}
 
-	return ds
+	return examples, classifications, headers
 }
 
-func parsePrefs(prefs string) []uint64 {
-	var ret []uint64
-	for _, val := range strings.Split(prefs, ",") {
-		temp, _ := strconv.ParseUint(val, 10, 64)
-		ret = append(ret, temp)
+func parseExample(headers []string, exampleStr string) classifier.Example {
+	var example = classifier.Example{}
+	for field, fieldValue := range strings.Split(exampleStr, ",") {
+		example[headers[field]] = fieldValue
 	}
 
-	return ret
+	return example
 }
 
 func main() {
@@ -70,17 +68,20 @@ func main() {
 	}
 
 	// Create classifier passing prior class probability
-	nb := classifier.NewNaiveBayes([]float64{0.5, 0.5})
+	nb := classifier.NewNaiveBayes(map[string]float64{
+		"I": 0.5,
+		"E": 0.5,
+	})
 
 	// Load dataset from file
-	ds := loadDataSet(*fileName)
+	examples, classifications, headers := loadDataSet(*fileName)
 
 	// Train the classifier
-	nb.Train(ds)
+	nb.Train(examples, classifications)
 
 	// Predict the nationality based on the passed preferences
-	class, prioriProb := nb.Predict(parsePrefs(*prefs))
+	class, prioriProb := nb.Predict(parseExample(headers, *prefs))
 
-	fmt.Printf("The preferences corresponds to %s (%f)\n", natMapping[class], prioriProb)
+	fmt.Printf("The preferences corresponds to %s (%f)\n", class, prioriProb)
 
 }
