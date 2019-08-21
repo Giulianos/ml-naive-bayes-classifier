@@ -44,12 +44,8 @@ func main() {
 		"poetry": 0.5,
 	})
 
-	// Examples
-	examples := toExamples(texts)
-	fmt.Println(examples)
-
 	// Train the classifier
-	nb.Train(examples, classifications)
+	nb.Train(toExamples(texts), classifications)
 
 	// Estimate text category
 	category, prioriProb := nb.Predict(toExample("The shutdown affects federal employees benefit"))

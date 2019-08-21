@@ -1,7 +1,5 @@
 package classifier
 
-import "fmt"
-
 type _PDhKey struct {
 	feature      string
 	featureValue string
@@ -23,7 +21,7 @@ func (nb NaiveBayes) conditionalPriorProbability(feature string, featureValue st
 	if ok {
 		return prob
 	} else {
-		return 0.0001
+		return 1/float64(len(nb.Ph))
 	}
 }
 
@@ -83,8 +81,6 @@ func (nb *NaiveBayes) Train(examples []Example, classifications []string) {
 	for key, value := range freqTable {
 		freqTable[key] = laplaceCorrection(value, countTable[key.class], float64(totalClasses))
 	}
-
-	fmt.Print(freqTable)
 
 	nb.PDh = freqTable
 }
