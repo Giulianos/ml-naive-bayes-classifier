@@ -1,5 +1,7 @@
 package classifier
 
+import "math"
+
 type _PDhKey struct {
 	feature      string
 	featureValue string
@@ -30,13 +32,12 @@ func (nb NaiveBayes) classPriorProbability(class string) float64 {
 }
 
 func (nb NaiveBayes) posterioriProbability(example Example, class string) float64 {
-	// TODO: use logarithms to calculate probabilities
-	probability := nb.classPriorProbability(class)
+	probability := math.Log(nb.classPriorProbability(class))
 	for feature, featureValue := range example {
-		probability *= nb.conditionalPriorProbability(feature, featureValue, class)
+		probability += math.Log(nb.conditionalPriorProbability(feature, featureValue, class))
 	}
 
-	return probability
+	return math.Exp(probability)
 }
 
 // Predict receives an array of features and returns the predicted encoded class
