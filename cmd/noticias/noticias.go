@@ -1,10 +1,66 @@
 package main
 
 import (
+	"bufio"
+	"encoding/csv"
 	"fmt"
 	"github.com/Giulianos/ml-naive-bayes-classifier/classifier"
+	"io"
+	"log"
+	"os"
 	"strings"
 )
+
+func loadDataSet(path string) ([]classifier.Example, []string, []string) {
+	file, _ := os.Open(path)
+	r := bufio.NewReader(file)
+	tsvReader := csv.NewReader(r)
+	tsvReader.Comma = '\t'
+	tsvReader.FieldsPerRecord = 4
+
+	var examples []classifier.Example
+	var classifications []string
+
+	// Read headers
+	headers, err := tsvReader.Read()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for {
+		record, err := tsvReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if len(record) != 4 {
+			//log.Printf("%s could no be added\n", record)
+			continue
+		}
+		// Add classification
+		classifications = append(classifications, record[len(record)-1])
+		// Add example
+		examples = append(examples, toExample(record[1]))
+	}
+
+	return examples, classifications, headers
+}
+
+func getCategoriesFrequencies(classifications []string) map[string]float64 {
+	frequencies := map[string]float64 {}
+
+	// Count appearances of each category
+	for _, class := range classifications {
+		frequencies[class]++
+	}
+
+	// Obtain relative frequency
+	for key, value := range frequencies {
+		frequencies[key] = value/float64(len(classifications))
+	}
+
+	return frequencies
+}
 
 func toExample(text string) classifier.Example {
 	example := make(classifier.Example)
@@ -14,42 +70,28 @@ func toExample(text string) classifier.Example {
 	return example
 }
 
-func toExamples(texts []string) []classifier.Example {
-	var examples []classifier.Example
-
-	for _, text := range texts {
-		examples = append(examples, toExample(text))
-	}
-
-	return examples
-}
-
 func main() {
 
-	var texts = []string{
-		"The government shutdown",
-		"Federal employees are protesting shutdown",
-		"Turn melancholy forth to funerals",
-	}
+	// Load training set
+	trainExamples, trainClassif, _ := loadDataSet(os.Args[2])
 
-	var classifications = []string{
-		"news",
-		"news",
-		"poetry",
-	}
+	// Get classes priori probability from training set
+	prioriClassProb := getCategoriesFrequencies(trainClassif)
 
-	// Create classifier passing prior class probability
-	nb := classifier.NewNaiveBayes(map[string]float64{
-		"news":   0.5,
-		"poetry": 0.5,
-	})
+	// Create classifier passing priori class probability
+	nb := classifier.NewNaiveBayes(prioriClassProb)
 
 	// Train the classifier
-	nb.Train(toExamples(texts), classifications)
+	nb.Train(trainExamples, trainClassif)
 
-	// Estimate text category
-	category, prioriProb := nb.Predict(toExample("The shutdown affects federal employees benefit"))
+	if len(os.Args) > 2 {
+		// Load test set
+		testExamples, testClassif, _ := loadDataSet(os.Args[1])
 
-	fmt.Printf("The text corresponds to %s (%f)\n", category, prioriProb)
+		// Eval classifier
+		metrics := classifier.EvalClassifier(nb, testExamples, testClassif)
 
+		// Print results
+		fmt.Println(metrics)
+	}
 }
