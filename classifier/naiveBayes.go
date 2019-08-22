@@ -23,7 +23,8 @@ func (nb NaiveBayes) conditionalPriorProbability(feature string, featureValue st
 	if ok {
 		return prob
 	} else {
-		return 1/float64(len(nb.Ph))
+		nonExistentFeatureKey := _PDhKey{"", "", class}
+		return nb.PDh[nonExistentFeatureKey]
 	}
 }
 
@@ -87,8 +88,14 @@ func (nb *NaiveBayes) Train(examples []Example, classifications []string) {
 		}
 	}
 
-	// Obtain relative frequencies
 	var totalClasses = len(countTable)
+
+	// Add frequency to non existent features
+	for class, totalCount := range countTable {
+		freqTable[_PDhKey{"", "", class}] = laplaceCorrection(0, totalCount, float64(totalClasses))
+	}
+
+	// Obtain relative frequencies
 	for key, value := range freqTable {
 		freqTable[key] = laplaceCorrection(value, countTable[key.class], float64(totalClasses))
 	}
