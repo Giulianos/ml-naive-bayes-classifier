@@ -14,8 +14,8 @@ type Metrics struct {
 	Accuracy        map[string]float64
 	Precision       map[string]float64
 	Recall          map[string]float64
-	TPRate          float64
 	F1Score         map[string]float64
+	TPRate          map[string]float64
 	classes         []string
 }
 
@@ -80,6 +80,13 @@ func (m *Metrics) computeF1Score() {
 	}
 }
 
+func (m *Metrics) computeTPRate() {
+	m.TPRate = make(map[string]float64, len(m.classes))
+	for _, class := range m.classes {
+		m.TPRate[class] = float64(m.TP[class]) / float64(m.TP[class]+m.FN[class])
+	}
+}
+
 // EvalClassifier evaluates a classifier with the provided test set
 // the classifier is assumed to be already trained
 func EvalClassifier(classifier Classifier, testExamples []Example, testClassification []string) Metrics {
@@ -110,6 +117,9 @@ func EvalClassifier(classifier Classifier, testExamples []Example, testClassific
 
 	// Calculate F1-Scores
 	metrics.computeF1Score()
+
+	// Calculate TP Rate
+	metrics.computeTPRate()
 
 	return metrics
 }
@@ -159,6 +169,7 @@ func String(m Metrics) string {
 		metrics += fmt.Sprintf("Precision: %f\n", m.Precision[class])
 		metrics += fmt.Sprintf("Recall: %f\n", m.Recall[class])
 		metrics += fmt.Sprintf("F1-Score: %f\n", m.F1Score[class])
+		metrics += fmt.Sprintf("TP Rate: %f\n", m.TPRate[class])
 	}
 
 	return cm + metrics
