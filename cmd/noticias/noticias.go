@@ -16,13 +16,15 @@ func loadDataSet(path string) ([]classifier.Example, []string, []string) {
 	r := bufio.NewReader(file)
 	tsvReader := csv.NewReader(r)
 	tsvReader.Comma = '\t'
-	tsvReader.FieldsPerRecord = 4
+	tsvReader.LazyQuotes = true
 
 	var examples []classifier.Example
 	var classifications []string
+	var line uint64 = 0
 
 	// Read headers
 	headers, err := tsvReader.Read()
+	line++
 
 	if err != nil {
 		log.Fatal(err)
@@ -30,11 +32,12 @@ func loadDataSet(path string) ([]classifier.Example, []string, []string) {
 
 	for {
 		record, err := tsvReader.Read()
+		line++
 		if err == io.EOF {
 			break
 		}
 		if len(record) != 4 {
-			//log.Printf("%s could no be added\n", record)
+			log.Printf("Error on %s (line %d)\n", path, line)
 			continue
 		}
 		// Add classification
