@@ -6,16 +6,16 @@ import (
 
 type Metrics struct {
 	ConfusionMatrix map[string]map[string]uint64
-	Outcomes	uint64
-	TP map[string]uint64
-	FP map[string]uint64
-	TN map[string]uint64
-	FN map[string]uint64
-	Accuracy  float64
-	Precision float64
-	TPRate    float64
-	F1Score float64
-	classes []string
+	Outcomes        uint64
+	TP              map[string]uint64
+	FP              map[string]uint64
+	TN              map[string]uint64
+	FN              map[string]uint64
+	Accuracy        map[string]float64
+	Precision       float64
+	TPRate          float64
+	F1Score         float64
+	classes         []string
 }
 
 func createConfusionMatrix(classes []string) map[string]map[string]uint64 {
@@ -27,7 +27,7 @@ func createConfusionMatrix(classes []string) map[string]map[string]uint64 {
 	return matrix
 }
 
-func (m *Metrics ) buildOutcomes() {
+func (m *Metrics) buildOutcomes() {
 	m.TP = make(map[string]uint64, len(m.classes))
 	m.TN = make(map[string]uint64, len(m.classes))
 	m.FP = make(map[string]uint64, len(m.classes))
@@ -51,9 +51,19 @@ func (m *Metrics ) buildOutcomes() {
 	}
 }
 
+func (m *Metrics) computeAccuracies() {
+	m.Accuracy = make(map[string]float64, len(m.classes))
+	for _, class := range m.classes {
+		if class == "" {
+			continue
+		}
+		m.Accuracy[class] = float64(m.TP[class] + m.TN[class])/float64(m.TP[class] + m.TN[class] + m.FP[class] + m.FN[class])
+	}
+}
+
 // EvalClassifier evaluates a classifier with the provided test set
 // the classifier is assumed to be already trained
-func EvalClassifier(classifier Classifier, testExamples  []Example, testClassification []string) Metrics {
+func EvalClassifier(classifier Classifier, testExamples []Example, testClassification []string) Metrics {
 	metrics := Metrics{}
 	metrics.classes = classifier.GetClasses()
 	metrics.ConfusionMatrix = createConfusionMatrix(metrics.classes)
@@ -69,6 +79,9 @@ func EvalClassifier(classifier Classifier, testExamples  []Example, testClassifi
 
 	// Calculate TP, FP, TN, FN from Confusion Matrix
 	metrics.buildOutcomes()
+
+	// Calculate Accuracies
+	metrics.computeAccuracies()
 
 	return metrics
 }
@@ -112,8 +125,9 @@ func String(m Metrics) string {
 		if class == "" {
 			continue
 		}
-		outcomes := fmt.Sprintf("TP: %d\nFP: %d\nTN: %d\nFN: %d\n", m.TP[class], m.FP[class], m.TN[class], m.FN[class])
-		metrics += class + "\n" + outcomes
+		metrics += class + "\n"
+		metrics += fmt.Sprintf("TP: %d\nFP: %d\nTN: %d\nFN: %d\n", m.TP[class], m.FP[class], m.TN[class], m.FN[class])
+		metrics += fmt.Sprintf("Accuracy: %f\n", m.Accuracy[class])
 	}
 
 	return cm + metrics
