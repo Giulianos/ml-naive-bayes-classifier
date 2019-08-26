@@ -50,7 +50,7 @@ func loadDataSet(path string) ([]classifier.Example, []string, []string) {
 }
 
 func getCategoriesFrequencies(classifications []string) map[string]float64 {
-	frequencies := map[string]float64 {}
+	frequencies := map[string]float64{}
 
 	// Count appearances of each category
 	for _, class := range classifications {
@@ -59,7 +59,7 @@ func getCategoriesFrequencies(classifications []string) map[string]float64 {
 
 	// Obtain relative frequency
 	for key, value := range frequencies {
-		frequencies[key] = value/float64(len(classifications))
+		frequencies[key] = value / float64(len(classifications))
 	}
 
 	return frequencies

@@ -2,6 +2,7 @@ package classifier
 
 import (
 	"math"
+	"sort"
 )
 
 type _PDhKey struct {
@@ -68,8 +69,12 @@ func (nb NaiveBayes) GetClasses() []string {
 	classes := make([]string, len(nb.Ph))
 
 	for class := range nb.Ph {
-		classes = append(classes, class)
+		if class != "" {
+			classes = append(classes, class)
+		}
 	}
+
+	sort.Strings(classes)
 
 	return classes
 }
