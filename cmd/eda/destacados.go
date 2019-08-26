@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 )
 
@@ -17,15 +18,14 @@ func main() {
 	tsvReader.Comma = '\t'
 	tsvReader.LazyQuotes = true
 
-	// Classes
-	classes := make(map[string]int)
-
 	// Read headers
 	_, err := tsvReader.Read()
 
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	var printed int
 
 	for {
 		record, err := tsvReader.Read()
@@ -35,15 +35,13 @@ func main() {
 		if len(record) < 4 {
 			continue
 		}
-		classes[record[3]]++
+		if record[3] == "Noticias destacadas" {
+			if rand.Float64() < 0.001 {
+				fmt.Println(record[1])
+				printed++
+			}
+		}
 	}
 
-	var total int
-
-	for class, quantity := range classes {
-		fmt.Printf("%s\t%d\n", class, quantity)
-		total += quantity
-	}
-
-	fmt.Printf("Total\t%d\n", total)
+	fmt.Printf("Printed\t%d\n", printed)
 }
