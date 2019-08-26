@@ -76,7 +76,7 @@ func toExample(text string) classifier.Example {
 func main() {
 
 	// Load training set
-	trainExamples, trainClassif, _ := loadDataSet(os.Args[2])
+	trainExamples, trainClassif, _ := loadDataSet(os.Args[1])
 
 	// Get classes priori probability from training set
 	prioriClassProb := getCategoriesFrequencies(trainClassif)
@@ -89,12 +89,12 @@ func main() {
 
 	if len(os.Args) > 2 {
 		// Load test set
-		testExamples, testClassif, _ := loadDataSet(os.Args[1])
+		testExamples, testClassif, _ := loadDataSet(os.Args[2])
 
 		// Eval classifier
 		metrics := classifier.EvalClassifier(nb, testExamples, testClassif)
 
 		// Print results
-		fmt.Println(metrics)
+		fmt.Print(classifier.String(metrics))
 	}
 }
