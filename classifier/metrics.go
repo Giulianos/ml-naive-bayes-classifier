@@ -13,6 +13,7 @@ type Metrics struct {
 	FN              map[string]uint64
 	Accuracy        map[string]float64
 	Precision       map[string]float64
+	Recall          map[string]float64
 	TPRate          float64
 	F1Score         float64
 	classes         []string
@@ -54,9 +55,6 @@ func (m *Metrics) buildOutcomes() {
 func (m *Metrics) computeAccuracies() {
 	m.Accuracy = make(map[string]float64, len(m.classes))
 	for _, class := range m.classes {
-		if class == "" {
-			continue
-		}
 		m.Accuracy[class] = float64(m.TP[class]+m.TN[class]) / float64(m.TP[class]+m.TN[class]+m.FP[class]+m.FN[class])
 	}
 }
@@ -64,10 +62,14 @@ func (m *Metrics) computeAccuracies() {
 func (m *Metrics) computePrecisions() {
 	m.Precision = make(map[string]float64, len(m.classes))
 	for _, class := range m.classes {
-		if class == "" {
-			continue
-		}
 		m.Precision[class] = float64(m.TP[class]) / float64(m.TP[class]+m.FP[class])
+	}
+}
+
+func (m *Metrics) computeRecalls() {
+	m.Recall = make(map[string]float64, len(m.classes))
+	for _, class := range m.classes {
+		m.Recall[class] = float64(m.TP[class]) / float64(m.TP[class]+m.TN[class])
 	}
 }
 
@@ -95,6 +97,9 @@ func EvalClassifier(classifier Classifier, testExamples []Example, testClassific
 
 	// Calculate Precisions
 	metrics.computePrecisions()
+
+	// Calculate Recalls
+	metrics.computeRecalls()
 
 	return metrics
 }
@@ -142,6 +147,7 @@ func String(m Metrics) string {
 		metrics += fmt.Sprintf("TP: %d\nFP: %d\nTN: %d\nFN: %d\n", m.TP[class], m.FP[class], m.TN[class], m.FN[class])
 		metrics += fmt.Sprintf("Accuracy: %f\n", m.Accuracy[class])
 		metrics += fmt.Sprintf("Precision: %f\n", m.Precision[class])
+		metrics += fmt.Sprintf("Recall: %f\n", m.Recall[class])
 	}
 
 	return cm + metrics
