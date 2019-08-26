@@ -6,6 +6,11 @@ import (
 
 type Metrics struct {
 	ConfusionMatrix map[string]map[string]uint64
+	Outcomes	uint64
+	TP map[string]uint64
+	FP map[string]uint64
+	TN map[string]uint64
+	FN map[string]uint64
 	Accuracy  float64
 	Precision float64
 	TPRate    float64
@@ -22,6 +27,30 @@ func createConfusionMatrix(classes []string) map[string]map[string]uint64 {
 	return matrix
 }
 
+func (m *Metrics ) buildOutcomes() {
+	m.TP = make(map[string]uint64, len(m.classes))
+	m.TN = make(map[string]uint64, len(m.classes))
+	m.FP = make(map[string]uint64, len(m.classes))
+	m.FN = make(map[string]uint64, len(m.classes))
+
+	for _, class := range m.classes {
+		if class == "" {
+			continue
+		}
+		m.TP[class] = m.ConfusionMatrix[class][class]
+		for _, class2 := range m.classes {
+			if class2 == "" {
+				continue
+			}
+			m.FN[class] += m.ConfusionMatrix[class][class2]
+			m.FP[class] += m.ConfusionMatrix[class2][class]
+		}
+		m.FN[class] -= m.TP[class]
+		m.FP[class] -= m.TP[class]
+		m.TN[class] = m.Outcomes - m.TP[class] - m.FP[class] - m.FN[class]
+	}
+}
+
 // EvalClassifier evaluates a classifier with the provided test set
 // the classifier is assumed to be already trained
 func EvalClassifier(classifier Classifier, testExamples  []Example, testClassification []string) Metrics {
@@ -35,13 +64,19 @@ func EvalClassifier(classifier Classifier, testExamples  []Example, testClassifi
 
 		// Add result to confusion matrix
 		metrics.ConfusionMatrix[actual][got]++
+		metrics.Outcomes++
 	}
+
+	// Calculate TP, FP, TN, FN from Confusion Matrix
+	metrics.buildOutcomes()
 
 	return metrics
 }
 
 func (metrics Metrics) confusionMatrixToString() string {
 	var rep string
+
+	rep += "\t"
 
 	for _, colClass := range metrics.classes {
 		if colClass == "" {
@@ -71,5 +106,15 @@ func (metrics Metrics) confusionMatrixToString() string {
 
 // String returns the string representation of the metrics
 func String(m Metrics) string {
-	return fmt.Sprintf("%s", m.confusionMatrixToString())
+	cm := fmt.Sprintf("%s\n", m.confusionMatrixToString())
+	metrics := ""
+	for _, class := range m.classes {
+		if class == "" {
+			continue
+		}
+		outcomes := fmt.Sprintf("TP: %d\nFP: %d\nTN: %d\nFN: %d\n", m.TP[class], m.FP[class], m.TN[class], m.FN[class])
+		metrics += class + "\n" + outcomes
+	}
+
+	return cm + metrics
 }
