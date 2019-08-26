@@ -12,7 +12,7 @@ type Metrics struct {
 	TN              map[string]uint64
 	FN              map[string]uint64
 	Accuracy        map[string]float64
-	Precision       float64
+	Precision       map[string]float64
 	TPRate          float64
 	F1Score         float64
 	classes         []string
@@ -57,7 +57,17 @@ func (m *Metrics) computeAccuracies() {
 		if class == "" {
 			continue
 		}
-		m.Accuracy[class] = float64(m.TP[class] + m.TN[class])/float64(m.TP[class] + m.TN[class] + m.FP[class] + m.FN[class])
+		m.Accuracy[class] = float64(m.TP[class]+m.TN[class]) / float64(m.TP[class]+m.TN[class]+m.FP[class]+m.FN[class])
+	}
+}
+
+func (m *Metrics) computePrecisions() {
+	m.Precision = make(map[string]float64, len(m.classes))
+	for _, class := range m.classes {
+		if class == "" {
+			continue
+		}
+		m.Precision[class] = float64(m.TP[class]) / float64(m.TP[class]+m.FP[class])
 	}
 }
 
@@ -82,6 +92,9 @@ func EvalClassifier(classifier Classifier, testExamples []Example, testClassific
 
 	// Calculate Accuracies
 	metrics.computeAccuracies()
+
+	// Calculate Precisions
+	metrics.computePrecisions()
 
 	return metrics
 }
@@ -128,6 +141,7 @@ func String(m Metrics) string {
 		metrics += class + "\n"
 		metrics += fmt.Sprintf("TP: %d\nFP: %d\nTN: %d\nFN: %d\n", m.TP[class], m.FP[class], m.TN[class], m.FN[class])
 		metrics += fmt.Sprintf("Accuracy: %f\n", m.Accuracy[class])
+		metrics += fmt.Sprintf("Precision: %f\n", m.Precision[class])
 	}
 
 	return cm + metrics
