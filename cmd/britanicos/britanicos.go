@@ -80,7 +80,7 @@ func main() {
 	nb.Train(examples, classifications)
 
 	// Predict the nationality based on the passed preferences
-	class, prioriProb := nb.Predict(parseExample(headers, *prefs))
+	class, prioriProb := nb.Classify(parseExample(headers, *prefs))
 
 	fmt.Printf("The preferences corresponds to %s (%f)\n", class, prioriProb)
 
