@@ -138,6 +138,10 @@ func EvalClassifier(classifier Classifier, testExamples []Example, testClassific
 func (metrics Metrics) confusionMatrixToString() string {
 	var rep string
 
+	if metrics.ConfusionMatrix == nil {
+		return ""
+	}
+
 	rep += "\t"
 
 	for _, colClass := range metrics.classes {
@@ -167,7 +171,7 @@ func (metrics Metrics) confusionMatrixToString() string {
 }
 
 // String returns the string representation of the metrics
-func String(m Metrics) string {
+func (m Metrics) String() string {
 	cm := fmt.Sprintf("%s\n", m.confusionMatrixToString())
 	metrics := ""
 	for _, class := range m.classes {

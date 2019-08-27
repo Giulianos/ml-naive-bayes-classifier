@@ -7,6 +7,7 @@ import (
 	"github.com/Giulianos/ml-naive-bayes-classifier/classifier"
 	"io"
 	"log"
+	"math"
 	"os"
 	"strings"
 )
@@ -73,28 +74,45 @@ func toExample(text string) classifier.Example {
 	return example
 }
 
-func main() {
+func splitDataset(examples []classifier.Example, classifications []string, splitNum int) ([]classifier.Example, []string, []classifier.Example, []string) {
+	testStart := splitNum
+	testEnd := int(math.Min(float64(splitNum+len(examples)/10), float64(len(examples))))
 
-	// Load training set
-	trainExamples, trainClassif, _ := loadDataSet(os.Args[1])
+	trainingExamples := append(examples[:testStart], examples[testEnd:]...)
+	trainingClassifications := append(classifications[:testStart], classifications[testEnd:]...)
+
+	testExamples := examples[testStart:testEnd]
+	testClassifications := classifications[testStart:testEnd]
+
+	return trainingExamples, trainingClassifications, testExamples, testClassifications
+}
+
+func evalClassifier(examples []classifier.Example, classifications []string, evalNum int) classifier.Metrics {
+	// Split dataset
+	trainingExamples, trainingClassif, testExamples, testClassif := splitDataset(examples, classifications, evalNum)
 
 	// Get classes priori probability from training set
-	prioriClassProb := getCategoriesFrequencies(trainClassif)
+	prioriClassProb := getCategoriesFrequencies(trainingClassif)
 
 	// Create classifier passing priori class probability
 	nb := classifier.NewNaiveBayes(prioriClassProb)
 
 	// Train the classifier
-	nb.Train(trainExamples, trainClassif)
+	nb.Train(trainingExamples, trainingClassif)
 
-	if len(os.Args) > 2 {
-		// Load test set
-		testExamples, testClassif, _ := loadDataSet(os.Args[2])
+	// Eval classifier
+	return classifier.EvalClassifier(nb, testExamples, testClassif)
+}
 
-		// Eval classifier
-		metrics := classifier.EvalClassifier(nb, testExamples, testClassif)
+func main() {
+	// Load dataset
+	examples, classifications, _ := loadDataSet(os.Args[1])
 
-		// Print results
-		fmt.Print(metrics)
+	var evaluations = make([]classifier.Metrics, 10)
+
+	for i := range evaluations {
+		evaluations[i] = evalClassifier(examples, classifications, i)
+
+		fmt.Println(evaluations[i])
 	}
 }
