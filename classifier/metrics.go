@@ -177,6 +177,17 @@ func (m Metrics) String() string {
 
 func (m Metrics) MetricsToString() string {
 	metric := make(map[string]string, 11)
+	metricsOrder := []string{"header",
+		"TP",
+		"FP",
+		"TN",
+		"FN",
+		"Accuracy",
+		"Precision",
+		"Recall",
+		"F1Score",
+		"TPRate",
+		"FPRate"}
 
 	// headers
 	metric["header"] = ""
@@ -209,12 +220,10 @@ func (m Metrics) MetricsToString() string {
 		metric["FPRate"] += fmt.Sprintf("\t%f", m.FPRate[class])
 	}
 
-	metrics := metric["header"] + "\n"
+	metrics := ""
 
-	for metric, value := range metric {
-		if metric != "header" {
-			metrics += fmt.Sprintf("%s\n", value)
-		}
+	for _, metricKey := range metricsOrder {
+		metrics += fmt.Sprintf("%s\n", metric[metricKey])
 	}
 
 	return metrics
