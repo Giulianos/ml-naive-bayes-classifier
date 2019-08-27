@@ -135,7 +135,7 @@ func EvalClassifier(classifier Classifier, testExamples []Example, testClassific
 	return metrics
 }
 
-func (metrics Metrics) confusionMatrixToString() string {
+func (metrics Metrics) ConfusionMatrixToString() string {
 	var rep string
 
 	if metrics.ConfusionMatrix == nil {
@@ -172,21 +172,50 @@ func (metrics Metrics) confusionMatrixToString() string {
 
 // String returns the string representation of the metrics
 func (m Metrics) String() string {
-	cm := fmt.Sprintf("%s\n", m.confusionMatrixToString())
-	metrics := ""
+	return fmt.Sprintf("%s%s", m.ConfusionMatrixToString(), m.MetricsToString())
+}
+
+func (m Metrics) MetricsToString() string {
+	metric := make(map[string]string, 11)
+
+	// headers
+	metric["header"] = ""
+	metric["TP"] = fmt.Sprintf("TP")
+	metric["FP"] = fmt.Sprintf("FP")
+	metric["TN"] = fmt.Sprintf("TN")
+	metric["FN"] = fmt.Sprintf("FN")
+	metric["Accuracy"] = fmt.Sprintf("Accuracy")
+	metric["Precision"] = fmt.Sprintf("Precision")
+	metric["Recall"] = fmt.Sprintf("Recall")
+	metric["F1Score"] = fmt.Sprintf("F1Score")
+	metric["TPRate"] = fmt.Sprintf("TPRate")
+	metric["FPRate"] = fmt.Sprintf("FPRate")
+
+	// fill data
 	for _, class := range m.classes {
 		if class == "" {
 			continue
 		}
-		metrics += class + "\n"
-		metrics += fmt.Sprintf("TP: %d\nFP: %d\nTN: %d\nFN: %d\n", m.TP[class], m.FP[class], m.TN[class], m.FN[class])
-		metrics += fmt.Sprintf("Accuracy: %f\n", m.Accuracy[class])
-		metrics += fmt.Sprintf("Precision: %f\n", m.Precision[class])
-		metrics += fmt.Sprintf("Recall: %f\n", m.Recall[class])
-		metrics += fmt.Sprintf("F1-Score: %f\n", m.F1Score[class])
-		metrics += fmt.Sprintf("TP Rate: %f\n", m.TPRate[class])
-		metrics += fmt.Sprintf("FP Rate: %f\n", m.FPRate[class])
+		metric["header"] += fmt.Sprintf("\t%s", class)
+		metric["TP"] += fmt.Sprintf("\t%d", m.TP[class])
+		metric["FP"] += fmt.Sprintf("\t%d", m.FP[class])
+		metric["TN"] += fmt.Sprintf("\t%d", m.TN[class])
+		metric["FN"] += fmt.Sprintf("\t%d", m.FN[class])
+		metric["Accuracy"] += fmt.Sprintf("\t%f", m.Accuracy[class])
+		metric["Precision"] += fmt.Sprintf("\t%f", m.Precision[class])
+		metric["Recall"] += fmt.Sprintf("\t%f", m.Recall[class])
+		metric["F1Score"] += fmt.Sprintf("\t%f", m.F1Score[class])
+		metric["TPRate"] += fmt.Sprintf("\t%f", m.TPRate[class])
+		metric["FPRate"] += fmt.Sprintf("\t%f", m.FPRate[class])
 	}
 
-	return cm + metrics
+	metrics := metric["header"] + "\n"
+
+	for metric, value := range metric {
+		if metric != "header" {
+			metrics += fmt.Sprintf("%s\n", value)
+		}
+	}
+
+	return metrics
 }

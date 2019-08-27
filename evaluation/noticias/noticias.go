@@ -112,7 +112,13 @@ func main() {
 
 	for i := range evaluations {
 		evaluations[i] = evalClassifier(examples, classifications, i)
-
-		fmt.Println(evaluations[i])
+		_, err := fmt.Fprintf(os.Stdout, "%s", evaluations[i].ConfusionMatrixToString())
+		if err != nil {
+			log.Fatal("Error writing confusion matrix to file")
+		}
+		_, err = fmt.Fprintf(os.Stderr, "%s", evaluations[i].MetricsToString())
+		if err != nil {
+			log.Fatal("Error writing metrics to file")
+		}
 	}
 }
